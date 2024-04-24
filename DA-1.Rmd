@@ -1,0 +1,480 @@
+---
+title: "DA-1"
+author: "Benjamin Roy V"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+library(readr)
+train <- read_csv("train.csv")
+View(train)
+```
+
+
+```{r}
+head(train)
+```
+
+
+```{r}
+sum(is.na(train))
+```
+
+```{r}
+summary(train)
+```
+
+
+one-hot-encoding 
+```{r}
+train$MTRANS<-  as.numeric(factor(train$MTRANS, levels = unique(train$MTRANS)))
+train$MTRANS
+
+```
+
+
+```{r}
+
+train$Gender<-  as.numeric(factor(train$Gender, levels = unique(train$Gender)))
+train$Gender
+```
+
+
+```{r}
+train$family_history_with_overweight<-  as.numeric(factor(train$family_history_with_overweight, levels = unique(train$family_history_with_overweight)))
+train$family_history_with_overweight
+
+```
+
+
+```{r}
+train$FAVC<-  as.numeric(factor(train$FAVC, levels = unique(train$FAVC)))
+train$FAVC
+
+```
+
+```{r}
+train$SMOKE<-  as.numeric(factor(train$SMOKE, levels = unique(train$SMOKE)))
+train$SMOKE
+```
+
+
+```{r}
+levels(factor(train$SMOKE))
+```
+
+
+```{r}
+train$CAEC <-  as.numeric(factor(train$CAEC ,levels = unique(train$CAEC)))
+train$CAEC
+```
+
+
+
+
+```{r}
+train$CALC <-  as.numeric(factor(train$CALC ,levels = unique(train$CALC)))
+train$CALC
+```
+
+
+```{r}
+train$SCC <-  as.numeric(factor(train$SCC ,levels = unique(train$SCC)))
+train$SCC
+```
+```{r}
+levels(factor(train$NObeyesdad))
+```
+
+```{r}
+train$NObeyesdad<-  as.numeric(factor(train$NObeyesdad ,levels = unique(train$NObeyesdad)))
+train$NObeyesdad
+```
+
+
+
+```{r}
+```
+
+
+
+```{r}
+head(train)
+
+```
+```{r}
+summary(train)
+```
+
+```{r}
+# Load required libraries
+library(readr)
+library(caret)
+library(nnet)
+
+
+# Explore the data
+summary(train)
+str(train)
+
+# Preprocess the data
+# Remove unnecessary columns
+train <- train[, -c(1)] # Remove 'id' column as it's not relevant for prediction
+
+# Convert categorical variables to factors
+train$Gender <- as.factor(train$Gender)
+train$family_history_with_overweight <- as.factor(train$family_history_with_overweight)
+train$FAVC <- as.factor(train$FAVC)
+train$CAEC <- as.factor(train$CAEC)
+train$SMOKE <- as.factor(train$SMOKE)
+train$SCC <- as.factor(train$SCC)
+train$MTRANS <- as.factor(train$MTRANS)
+
+# Split the data into training and testing sets
+set.seed(123) # for reproducibility
+trainIndex <- createDataPartition(train$NObeyesdad, p = .8, list = FALSE)
+train_data <- train[trainIndex,]
+test_data <- train[-trainIndex,]
+
+# Train the multinomial logistic regression model
+model <- multinom(NObeyesdad ~ ., data = train_data)
+
+# Make predictions on the test set
+predictions <- predict(model, test_data)
+
+# Evaluate the model
+confusion_matrix <- table(test_data$NObeyesdad, predictions)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+# Print the confusion matrix and accuracy
+print("Confusion Matrix:")
+print(confusion_matrix)
+print(paste("Accuracy:", accuracy))
+
+
+```
+
+
+
+```{r}
+# Load required libraries
+library(rpart)
+
+# Train the decision tree model
+decision_tree <- rpart(NObeyesdad ~ ., data = train_data, method = "class")
+
+# Make predictions on the test set
+predictions_dt <- predict(decision_tree, test_data, type = "class")
+
+# Evaluate the model
+confusion_matrix_dt <- table(test_data$NObeyesdad, predictions_dt)
+accuracy_dt <- sum(diag(confusion_matrix_dt)) / sum(confusion_matrix_dt)
+
+# Print the confusion matrix and accuracy
+print("Decision Tree Confusion Matrix:")
+print(confusion_matrix_dt)
+print(paste("Decision Tree Accuracy:", accuracy_dt))
+
+
+```
+
+
+```{r}
+# Load required libraries
+library(e1071)
+
+# Train the SVM model
+svm_model <- svm(NObeyesdad ~ ., data = train_data)
+
+# Make predictions on the test set
+predictions_svm <- predict(svm_model, test_data)
+
+# Convert predicted values to range 1 to 5
+predictions_svm_numeric <- match(predictions_svm, unique(train_data$NObeyesdad))
+
+# Map numeric labels to 1 to 5 range
+predictions_mapped <- as.numeric(factor(predictions_svm_numeric, levels = 1:length(unique(train_data$NObeyesdad))))
+
+# Evaluate the model
+confusion_matrix_svm <- table(test_data$NObeyesdad, predictions_mapped)
+accuracy_svm <- sum(diag(confusion_matrix_svm)) / sum(confusion_matrix_svm)
+
+# Print the confusion matrix and accuracy
+print("SVM Confusion Matrix:")
+print(confusion_matrix_svm)
+print(paste("SVM Accuracy:", accuracy_svm))
+
+
+```
+
+
+```{r}
+# Load required libraries
+library(randomForest)
+
+# Train the random forest model
+random_forest <- randomForest(NObeyesdad ~ ., data = train_data, ntree = 500)
+
+# Make predictions on the test set
+predictions_rf <- predict(random_forest, test_data)
+
+# Convert predictions to integer values
+predictions_rf_int <- as.integer(round(predictions_rf))
+
+# Evaluate the model
+confusion_matrix_rf <- table(test_data$NObeyesdad, predictions_rf_int)
+accuracy_rf <- sum(diag(confusion_matrix_rf)) / sum(confusion_matrix_rf)
+
+# Print the confusion matrix and accuracy
+print("Random Forest Confusion Matrix:")
+print(confusion_matrix_rf)
+print(paste("Random Forest Accuracy:", accuracy_rf))
+
+
+```
+
+
+
+
+```{r}
+# Load required libraries
+library(e1071)
+
+# Train the SVM model
+svm_model <- svm(NObeyesdad ~ ., data = train_data)
+
+# Make predictions on the test set
+predictions_svm <- predict(svm_model, test_data)
+
+# Convert predictions to integer values
+predictions_svm_int <- as.integer(round(predictions_svm))
+
+# Evaluate the model
+confusion_matrix_svm <- table(test_data$NObeyesdad, predictions_svm_int)
+accuracy_svm <- sum(diag(confusion_matrix_svm)) / sum(confusion_matrix_svm)
+
+# Print the confusion matrix and accuracy
+print("SVM Confusion Matrix:")
+print(confusion_matrix_svm)
+print(paste("SVM Accuracy:", accuracy_svm))
+
+
+```
+
+
+```{r}
+
+# Load required libraries
+library(class)
+
+# Train the kNN model
+knn_model <- knn(train = train_data[, -ncol(train_data)], 
+                 test = test_data[, -ncol(test_data)], 
+                 cl = train_data$NObeyesdad, 
+                 k = 5)
+
+# Convert predictions to integer values
+knn_model_int <- as.integer(round(as.numeric(as.factor(knn_model))))
+
+# Evaluate the model
+confusion_matrix_knn <- table(test_data$NObeyesdad, knn_model_int)
+accuracy_knn <- sum(diag(confusion_matrix_knn)) / sum(confusion_matrix_knn)
+
+# Print the confusion matrix and accuracy
+print("kNN Confusion Matrix:")
+print(confusion_matrix_knn)
+print(paste("kNN Accuracy:", accuracy_knn))
+
+```
+
+
+Bagging (Bootstrap Aggregating) using Random Forest
+
+```{r}
+# Load required libraries
+library(randomForest)
+
+# Train the Bagging model (Random Forest)
+bagging_model <- randomForest(NObeyesdad ~ ., data = train_data, ntree = 20)
+
+# Make predictions on the test set
+predictions_bagging <- predict(bagging_model, test_data)
+
+# Convert predictions to integer values
+predictions_bagging_int <- as.integer(round(predictions_bagging))
+
+# Evaluate the model
+confusion_matrix_bagging <- table(test_data$NObeyesdad, predictions_bagging_int)
+accuracy_bagging <- sum(diag(confusion_matrix_bagging)) / sum(confusion_matrix_bagging)
+
+# Print the confusion matrix and accuracy
+print("Bagging (Random Forest) Confusion Matrix:")
+print(confusion_matrix_bagging)
+print(paste("Bagging (Random Forest) Accuracy:", accuracy_bagging))
+
+
+```
+
+Boosting using Gradient Boosting Machine (GBM)
+
+```{r}
+# Load required libraries
+library(gbm)
+
+# Train the Boosting model (Gradient Boosting Machine)
+boosting_model <- gbm(NObeyesdad ~ ., data = train_data, distribution = "multinomial", n.trees = 500, interaction.depth = 4, shrinkage = 0.01)
+
+# Make predictions on the test set
+predictions_boosting <- predict(boosting_model, newdata = test_data, n.trees = 500, type = "response")
+
+# Convert predicted probabilities to class labels
+predictions_boosting <- colnames(predictions_boosting)[apply(predictions_boosting, 1, which.max)]
+
+# Evaluate the model
+confusion_matrix_boosting <- table(test_data$NObeyesdad, predictions_boosting)
+accuracy_boosting <- sum(diag(confusion_matrix_boosting)) / sum(confusion_matrix_boosting)
+
+# Print the confusion matrix and accuracy
+print("Boosting (Gradient Boosting Machine) Confusion Matrix:")
+print(confusion_matrix_boosting)
+print(paste("Boosting (Gradient Boosting Machine) Accuracy:", accuracy_boosting))
+
+```
+
+
+```{r}
+# Load required libraries
+library(nnet)
+library(randomForest)
+
+# Train Multinomial Logistic Regression model
+multinomial_model <- multinom(NObeyesdad ~ ., data = train_data)
+
+# Train Bagging model using Multinomial Logistic Regression as base
+bagged_multinomial_model <- randomForest(NObeyesdad ~ ., data = train_data, ntree = 20, mtry = ncol(train_data), replace = TRUE, nodesize = 1)
+
+# Make predictions on the test set using Multinomial Logistic Regression
+predictions_multinomial <- predict(multinomial_model, newdata = test_data, type = "class")
+
+# Convert predictions to integer values for Multinomial Logistic Regression
+predictions_multinomial_int <- as.integer(round(as.numeric(as.factor(predictions_multinomial))))
+
+# Make predictions on the test set using Bagged Multinomial Logistic Regression
+predictions_bagged_multinomial <- predict(bagged_multinomial_model, newdata = test_data)
+
+# Convert predictions to integer values for Bagged Multinomial Logistic Regression
+predictions_bagged_multinomial_int <- as.integer(round(predictions_bagged_multinomial))
+
+# Evaluate Multinomial Logistic Regression model
+confusion_matrix_multinomial <- table(test_data$NObeyesdad, predictions_multinomial_int)
+accuracy_multinomial <- sum(diag(confusion_matrix_multinomial)) / sum(confusion_matrix_multinomial)
+
+# Evaluate Bagged Multinomial Logistic Regression model
+confusion_matrix_bagged_multinomial <- table(test_data$NObeyesdad, predictions_bagged_multinomial_int)
+accuracy_bagged_multinomial <- sum(diag(confusion_matrix_bagged_multinomial)) / sum(confusion_matrix_bagged_multinomial)
+
+# Print the confusion matrices and accuracies
+print("Multinomial Logistic Regression Confusion Matrix:")
+print(confusion_matrix_multinomial)
+print(paste("Multinomial Logistic Regression Accuracy:", accuracy_multinomial))
+
+print("Bagged Multinomial Logistic Regression Confusion Matrix:")
+print(confusion_matrix_bagged_multinomial)
+print(paste("Bagged Multinomial Logistic Regression Accuracy:", accuracy_bagged_multinomial))
+
+
+
+```
+
+
+
+
+```{r}
+# Load required libraries
+library(e1071)
+library(class)
+library(randomForest)
+
+# Train SVM model
+svm_model <- svm(NObeyesdad ~ ., data = train_data)
+
+# Train kNN model
+knn_model <- knn(train = train_data[, -ncol(train_data)], 
+                 test = test_data[, -ncol(test_data)], 
+                 cl = train_data$NObeyesdad, 
+                 k = 5)
+
+# Combine predictions of SVM and kNN
+combined_predictions <- data.frame(svm = predict(svm_model, newdata = test_data),
+                                   knn = knn_model,
+                                   NObeyesdad = test_data$NObeyesdad) # Include the target variable
+
+# Train Bagging model using combined predictions as base
+bagged_combined_model <- randomForest(NObeyesdad ~ ., data = combined_predictions, ntree = 500, mtry = 2, replace = TRUE, nodesize = 1)
+
+# Make predictions on the test set using combined model
+predictions_combined <- predict(bagged_combined_model, newdata = combined_predictions)
+
+# Convert predictions to integer values for combined model
+predictions_combined_int <- as.integer(round(predictions_combined))
+
+# Evaluate combined model
+confusion_matrix_combined <- table(test_data$NObeyesdad, predictions_combined_int)
+accuracy_combined <- sum(diag(confusion_matrix_combined)) / sum(confusion_matrix_combined)
+
+# Print the confusion matrix and accuracy
+print("Combined Ensemble Confusion Matrix:")
+print(confusion_matrix_combined)
+print(paste("Combined Ensemble Accuracy:", accuracy_combined))
+
+
+```
+
+
+```{r}
+
+# Load required libraries
+library(nnet)
+
+# Train Decision Tree model
+dt_model <- rpart(NObeyesdad ~ ., data = train_data, method = "class")
+
+# Make predictions on the test set using Decision Tree model
+predictions_dt <- predict(dt_model, newdata = test_data, type = "class")
+
+# Train Multinomial Logistic Regression model
+multinom_model <- multinom(NObeyesdad ~ ., data = train_data)
+
+# Make predictions on the test set using Multinomial Logistic Regression model
+predictions_multinom <- predict(multinom_model, newdata = test_data, type = "class")
+
+# Combine predictions of Decision Tree and Multinomial Logistic Regression with previous ensemble
+combined_predictions <- data.frame(svm = predict(svm_model, newdata = test_data),
+                                   knn = knn_model,
+                                   dt = predictions_dt,
+                                   multinom = predictions_multinom,
+                                   NObeyesdad = test_data$NObeyesdad)
+
+# Train Bagging model using combined predictions as base
+bagged_combined_model <- randomForest(NObeyesdad ~ ., data = combined_predictions, ntree = 500, mtry = 2, replace = TRUE, nodesize = 1)
+
+# Make predictions on the test set using combined model
+predictions_combined <- predict(bagged_combined_model, newdata = combined_predictions)
+
+# Convert predictions to integer values for combined model
+predictions_combined_int <- as.integer(round(predictions_combined))
+
+# Evaluate combined model
+confusion_matrix_combined <- table(test_data$NObeyesdad, predictions_combined_int)
+accuracy_combined <- sum(diag(confusion_matrix_combined)) / sum(confusion_matrix_combined)
+
+# Print the confusion matrix and accuracy
+print("Combined Ensemble Confusion Matrix:")
+print(confusion_matrix_combined)
+print(paste("Combined Ensemble Accuracy:", accuracy_combined))
+
+
+```
